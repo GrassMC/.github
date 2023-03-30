@@ -1,0 +1,79 @@
+name: Gradle Java CI
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: 'Java version to use'
+        required: false
+        type: number
+        default: 17
+
+      gradle-version:
+        description: 'Gradle version to use'
+        required: false
+        type: string
+        default: wrapper
+
+      extrac-gradle-params:
+        description: 'Extra Gradle parameters'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java JDK ${{ inputs.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: zulu
+
+      - name: Validate gradle-wrapper
+        uses: gradle/wrapper-validation-action@v1.0.6
+
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action/@v2.4.0
+        with:
+          gradle-version: ${{ inputs.gradle-version }}
+          gradle-home-cache-cleanup: true
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          arguments: |
+            build
+            --scan
+            ${{ inputs.extrac-gradle-params }}
+
+      - name: Upload build reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: '${{ matrix.os }}-build-reports'
+          path: |
+            build/reports/
+            */build/reports/
+
+      - name: Add build scan URL as PR comment
+        uses: actions/github-script@v5
+        if: github.event_name == 'pull_request' && failure()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ ${{ github.workflow }} failed: ${{ steps.build.outputs.build-scan-url }}'
+            })
