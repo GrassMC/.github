@@ -1,7 +1,9 @@
 {
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "files.encoding": "utf8",
   "files.insertFinalNewline": true,
-  "conventionalCommits.scopes": ["reusable-workflow"]
+  "conventionalCommits.scopes": ["reusable-workflow"],
+  "prettier.singleQuote": true
 }
