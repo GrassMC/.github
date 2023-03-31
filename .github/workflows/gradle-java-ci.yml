@@ -20,6 +20,12 @@ on:
         type: string
         default: ''
 
+      build-scans:
+        description: 'Enable build scans'
+        required: false
+        type: boolean
+        default: true
+
       upload-reports:
         description: 'Upload build reports'
         required: false
@@ -41,7 +47,22 @@ permissions:
   actions: write
 
 jobs:
+  create-build-args:
+    runs-on: ubuntu-latest
+    outputs:
+      build-args: ${{ steps.create-build-args.outputs.build-args }}
+    steps:
+      - name: Create build arguments
+        id: create-build-args
+        run: |
+          if [ "${{ inputs.build-scans }}" = "true" ]; then
+            echo "::set-output name=build-args::build --scan ${{ inputs.extra-gradle-params }}}}"
+          else
+            echo "::set-output name=build-args::build ${{ inputs.extra-gradle-params }}}}"
+          fi
+
   build:
+    needs: create-build-args
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -68,10 +89,7 @@ jobs:
           gradle-version: ${{ inputs.gradle-version }}
           gradle-home-cache-cleanup: true
           cache-read-only: ${{ github.event_name == 'pull_request' }}
-          arguments: |
-            build
-            --scan
-            ${{ inputs.extra-gradle-params }}
+          arguments: ${{ needs.create-build-args.outputs.build-args }}
 
       - name: Upload build reports
         uses: actions/upload-artifact@v3
@@ -94,7 +112,7 @@ jobs:
 
       - name: Add build scan URL as PR comment
         uses: actions/github-script@v5
-        if: github.event_name == 'pull_request' && failure()
+        if: inputs.build-scans && github.event_name == 'pull_request' && failure()
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
