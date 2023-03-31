@@ -27,13 +27,13 @@ on:
         default: true
 
       upload-reports:
-        description: 'Upload build reports'
+        description: 'Enable upload build reports'
         required: false
         type: boolean
         default: true
 
       upload-artifacts:
-        description: 'Upload build artifacts'
+        description: 'Enable upload build artifacts'
         required: false
         type: boolean
         default: true
@@ -51,6 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build-args: ${{ steps.create-build-args.outputs.build-args }}
+
     steps:
       - name: Create build arguments
         id: create-build-args
@@ -105,11 +106,11 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ inputs.upload-artifacts }}
         with:
+          if-no-files-found: error
           name: '${{ matrix.os }}-build-artifacts'
           path: |
             build/libs/
             */build/libs/
-          if-no-files-found: error
 
       - name: Add build scan URL as PR comment
         uses: actions/github-script@v5
