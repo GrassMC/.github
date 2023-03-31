@@ -20,6 +20,12 @@ on:
         type: string
         default: ''
 
+      upload-reports:
+        description: 'Upload build reports'
+        required: false
+        type: boolean
+        default: true
+
       upload-artifacts:
         description: 'Upload build artifacts'
         required: false
@@ -69,6 +75,7 @@ jobs:
 
       - name: Upload build reports
         uses: actions/upload-artifact@v3
+        if: ${{ inputs.upload-reports }}
         with:
           name: '${{ matrix.os }}-build-reports'
           path: |
