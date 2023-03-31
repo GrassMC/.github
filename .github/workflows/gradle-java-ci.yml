@@ -14,11 +14,23 @@ on:
         type: string
         default: wrapper
 
-      extrac-gradle-params:
+      extra-gradle-params:
         description: 'Extra Gradle parameters'
         required: false
         type: string
         default: ''
+
+      upload-reports:
+        description: 'Upload build reports'
+        required: false
+        type: boolean
+        default: true
+
+      upload-artifacts:
+        description: 'Upload build artifacts'
+        required: false
+        type: boolean
+        default: true
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.event.number || github.ref }}'
@@ -59,15 +71,26 @@ jobs:
           arguments: |
             build
             --scan
-            ${{ inputs.extrac-gradle-params }}
+            ${{ inputs.extra-gradle-params }}
 
       - name: Upload build reports
         uses: actions/upload-artifact@v3
+        if: ${{ inputs.upload-reports }}
         with:
           name: '${{ matrix.os }}-build-reports'
           path: |
             build/reports/
             */build/reports/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        if: ${{ inputs.upload-artifacts }}
+        with:
+          name: '${{ matrix.os }}-build-artifacts'
+          path: |
+            build/libs/
+            */build/libs/
+          if-no-files-found: error
 
       - name: Add build scan URL as PR comment
         uses: actions/github-script@v5
