@@ -3,10 +3,11 @@ name: CodeQL
 on:
   workflow_call:
     inputs:
-      language:
-        description: 'Language to analyze'
-        required: true
+      languages:
+        description: 'Languages to analyze. Please use JSON Array format. e.g. ["java", "c++"]'
+        required: false
         type: string
+        default: '["java"]'
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.event.number || github.ref }}'
@@ -21,6 +22,11 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        languages: ${{ fromJson(inputs.languages) }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -28,7 +34,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: ${{ inputs.language }}
+          languages: ${{ matrix.languages }}
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
@@ -36,4 +42,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
         with:
-          category: '/language:${{ inputs.language }}'
+          category: '/languages:${{ matrix.languages }}'
