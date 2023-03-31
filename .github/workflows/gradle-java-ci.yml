@@ -14,7 +14,7 @@ on:
         type: string
         default: wrapper
 
-      extrac-gradle-params:
+      extra-gradle-params:
         description: 'Extra Gradle parameters'
         required: false
         type: string
@@ -59,7 +59,7 @@ jobs:
           arguments: |
             build
             --scan
-            ${{ inputs.extrac-gradle-params }}
+            ${{ inputs.extra-gradle-params }}
 
       - name: Upload build reports
         uses: actions/upload-artifact@v3
