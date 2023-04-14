@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Default preset for use with GrassMC's repos",
+  "extends": [
+    "config:base"
+  ],
+  "timezone": "Asia/Ho_Chi_Minh",
+  "prHourlyLimit": 4,
+  "schedule": [
+    "before 6pm on Sat",
+    "before 6pm on Sun"
+  ],
+  "labels": [
+    "type: dependencies"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true
+    }
+  ]
+}
