@@ -16,10 +16,33 @@
   "packageRules": [
     {
       "matchManagers": [
-        "github-actions"
+        "github-actions",
+        "gradle-wrapper"
       ],
       "matchUpdateTypes": [
         "minor",
+        "patch"
+      ],
+      "automerge": true
+    },
+    {
+      "matchDepTypes": [
+        "plugin"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "matchManagers": [
+        "gradle"
+      ],
+      "automerge": true
+    },
+    {
+      "matchDepTypes": [
+        "dependencies"
+      ],
+      "matchUpdateTypes": [
         "patch"
       ],
       "automerge": true
