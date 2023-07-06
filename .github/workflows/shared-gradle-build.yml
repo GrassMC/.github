@@ -1,0 +1,73 @@
+name: Gradle Build
+on:
+  workflow_call:
+    inputs:
+      jdk-version:
+        description: JDK version to use
+        required: false
+        type: string
+        default: '17'
+
+      gradle-version:
+        description: Gradle version to use
+        required: false
+        type: string
+        default: wrapper
+
+      gradle-extra-args:
+        description: Extra Gradle parameters
+        required: false
+        type: string
+        default: ''
+
+      upload-reports:
+        description: Enable uploading build reports
+        required: false
+        type: boolean
+        default: true
+
+      upload-artifacts:
+        description: Enable uploading build artifacts
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Gradle verison ${{ inputs.gradle-version }}
+        uses: TozyF/setup-gradle-action@v1
+        with:
+          jdk-version: ${{ inputs.jdk-version }}
+          gradle-version: ${{ inputs.gradle-version }}
+
+      - name: Build with Gradle
+        id: build
+        run: ./gradlew build ${{ inputs.gradle-extra-args }}
+
+      - name: Upload build reports
+        uses: actions/upload-artifact@v3
+        if: ${{ inputs.upload-reports }}
+        with:
+          name: ${{ matrix.os }}-build-reports
+          path: |
+            build/reports/
+            */build/reports/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        if: ${{ inputs.upload-artifacts }}
+        with:
+          if-no-files-found: error
+          name: ${{ matrix.os }}-build-artifacts
+          path: |
+            build/libs/
+            */build/libs/
