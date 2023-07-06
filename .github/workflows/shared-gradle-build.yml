@@ -49,6 +49,9 @@ jobs:
           jdk-version: ${{ inputs.jdk-version }}
           gradle-version: ${{ inputs.gradle-version }}
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build with Gradle
         id: build
         run: ./gradlew build ${{ inputs.gradle-extra-args }}
