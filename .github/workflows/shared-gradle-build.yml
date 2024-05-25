@@ -1,4 +1,4 @@
-name: Gradle Build
+name: Gradle build
 on:
   workflow_call:
     inputs:
@@ -6,7 +6,7 @@ on:
         description: JDK version to use
         required: false
         type: string
-        default: '17'
+        default: "17"
 
       gradle-version:
         description: Gradle version to use
@@ -14,63 +14,68 @@ on:
         type: string
         default: wrapper
 
-      gradle-extra-args:
-        description: Extra Gradle parameters
+      gradle-build-args:
+        description: Gradle build args
         required: false
         type: string
-        default: ''
+        default: build
 
-      upload-reports:
-        description: Enable uploading build reports
+      gradle-build-scan:
+        description: Enable Gradle publish Gradle Build Scan
         required: false
         type: boolean
-        default: true
+        default: false
 
-      upload-artifacts:
-        description: Enable uploading build artifacts
+      reports-path:
+        description: Path to build reports to upload
         required: false
-        type: boolean
-        default: true
+        type: string
+        default: ""
+
+      artifacts-path:
+        description: Path to build artifacts to upload
+        required: false
+        type: string
+        default: ""
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Gradle verison ${{ inputs.gradle-version }}
-        uses: TozyF/setup-gradle-action@v1
+      - name: Setup JDK
+        uses: actions/setup-java@v4
         with:
-          jdk-version: ${{ inputs.jdk-version }}
-          gradle-version: ${{ inputs.gradle-version }}
+          distribution: zulu
+          java-version: ${{ inputs.jdk-version }}
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: ${{ inputs.gradle-version }}
+          validate-wrappers: true
+          gradle-home-cache-cleanup: true
+          add-job-summary-as-pr-comment: on-failure
+          build-scan-publish: ${{ inputs.gradle-build-scan }}
+          build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
+          build-scan-terms-of-use-agree: "yes"
 
       - name: Build with Gradle
         id: build
-        run: ./gradlew build ${{ inputs.gradle-extra-args }}
+        run: gradle ${{ inputs.gradle-build-args }}
 
       - name: Upload build reports
-        uses: actions/upload-artifact@v3
-        if: ${{ inputs.upload-reports }}
+        uses: actions/upload-artifact@v4
+        if: ${{ inputs.reports-path != "" }}
         with:
-          name: ${{ matrix.os }}-build-reports
-          path: |
-            build/reports/
-            */build/reports/
+          name: build-reports
+          path: ${{ inputs.reports-path }}
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        if: ${{ inputs.upload-artifacts }}
+        uses: actions/upload-artifact@v4
+        if: ${{ inputs.artifacts-path != "" }}
         with:
-          if-no-files-found: error
-          name: ${{ matrix.os }}-build-artifacts
-          path: |
-            build/libs/
-            */build/libs/
+          name: build-artifacts
+          path: ${{ inputs.artifacts-path }}
