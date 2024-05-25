@@ -68,14 +68,14 @@ jobs:
 
       - name: Upload build reports
         uses: actions/upload-artifact@v4
-        if: ${{ inputs.reports-path != "" }}
+        if: ${{ inputs.reports-path != '' }}
         with:
           name: build-reports
           path: ${{ inputs.reports-path }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
-        if: ${{ inputs.artifacts-path != "" }}
+        if: ${{ inputs.artifacts-path != '' }}
         with:
           name: build-artifacts
           path: ${{ inputs.artifacts-path }}
