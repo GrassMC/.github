@@ -1,0 +1,107 @@
+name: Gradle publish to Tozydev Repository
+on:
+  workflow_call:
+    inputs:
+      jdk-version:
+        description: JDK version to use
+        required: false
+        type: string
+        default: "17"
+
+      gradle-version:
+        description: Gradle version to use
+        required: false
+        type: string
+        default: wrapper
+
+      gradle-publish-args:
+        description: Gradle publish args
+        required: false
+        type: string
+        default: publish
+
+      gradle-build-scan:
+        description: Enable Gradle publish Gradle Build Scan
+        required: false
+        type: boolean
+        default: false
+
+      reports-path:
+        description: Path to build reports to upload
+        required: false
+        type: string
+        default: ""
+
+      artifacts-path:
+        description: Path to build artifacts to upload
+        required: false
+        type: string
+        default: ""
+
+    secrets:
+      TOZYDEV_RELEASES_USERNAME:
+        required: false
+
+      TOZYDEV_RELEASES_PASSWORD:
+        required: false
+
+      SIGNING_KEY_ID:
+        required: false
+
+      SIGNING_KEY:
+        required: false
+
+      SIGNING_PASSWORD:
+        required: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: Tozydev Repository
+      url: https://maven.nguyenthanhtan.id.vn
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: ${{ inputs.jdk-version }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: ${{ inputs.gradle-version }}
+          validate-wrappers: true
+          gradle-home-cache-cleanup: true
+          add-job-summary-as-pr-comment: on-failure
+          build-scan-publish: ${{ inputs.gradle-build-scan }}
+          build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
+          build-scan-terms-of-use-agree: "yes"
+
+      - name: Publish with Gradle
+        id: publish
+        run: gradle ${{ inputs.gradle-publish-args }}
+        env:
+          ORG_GRADLE_PROJECT_tozydevReleasesUsername: ${{ secrets.TOZYDEV_RELEASES_USERNAME }}
+          ORG_GRADLE_PROJECT_tozydevReleasesPassword: ${{ secrets.TOZYDEV_RELEASES_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryPassword: ${{ secrets.SIGNING_PASSWORD }}
+
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: ${{ inputs.reports-path != "" }}
+        with:
+          name: build-reports
+          path: ${{ inputs.reports-path }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ inputs.artifacts-path != "" }}
+        with:
+          name: build-artifacts
+          path: ${{ inputs.artifacts-path }}
