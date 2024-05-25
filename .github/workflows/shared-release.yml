@@ -4,7 +4,7 @@ on:
     outputs:
       release-created:
         description: Whether a release was created
-        value: ${{ steps.release.outputs.release-created }}
+        value: ${{ jobs.release.outputs.release-created }}
 
 permissions:
   contents: write
