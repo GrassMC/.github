@@ -1,0 +1,67 @@
+name: Gradle Release
+on:
+  workflow_call:
+    inputs:
+      jdk-version:
+        description: JDK version to use
+        required: false
+        type: string
+        default: "17"
+
+      gradle-version:
+        description: Gradle version to use
+        required: false
+        type: string
+        default: wrapper
+
+      gradle-build-args:
+        description: Gradle build args
+        required: false
+        type: string
+        default: build
+
+      artifacts-path:
+        description: Path to build artifacts to upload
+        required: false
+        type: string
+        default: ""
+
+    outputs:
+      release-created:
+        description: Whether a release was created
+        value: ${{ jobs.release.outputs.release-created }}
+
+jobs:
+  call-build:
+    uses: ./.github/workflows/shared-gradle-build.yml
+    with:
+      jdk-version: ${{ inputs.jdk-version }}
+      gradle-version: ${{ inputs.gradle-version }}
+      gradle-build-args: ${{ inputs.gradle-build-args }}
+      artifacts-path: ${{ inputs.artifacts-path }}
+
+  release:
+    needs: [call-build]
+    runs-on: ubuntu-latest
+    outputs:
+      release-created: ${{ steps.release.outputs.release_created }}
+
+    steps:
+      - name: Release Please Action
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ inputs.artifacts-path }}
+
+      - name: Upload release artifacts
+        if: ${{ steps.release.release_created }}
+        run: gh release upload ${{ steps.release.outputs.tag_name }} ${{ inputs.artifacts-path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
