@@ -12,7 +12,6 @@ on:
         description: Gradle version to use
         required: false
         type: string
-        default: wrapper
 
       gradle-publish-args:
         description: Gradle publish args
