@@ -61,9 +61,12 @@ jobs:
           build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
           build-scan-terms-of-use-agree: "yes"
 
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
       - name: Build with Gradle
         id: build
-        run: gradle ${{ inputs.gradle-build-args }}
+        run: ./gradlew ${{ inputs.gradle-build-args }}
 
       - name: Upload build reports
         uses: actions/upload-artifact@v4
