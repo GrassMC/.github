@@ -42,6 +42,10 @@ jobs:
   release:
     needs: [call-build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
     outputs:
       release-created: ${{ steps.release.outputs.release_created }}
 
@@ -60,7 +64,7 @@ jobs:
           path: ${{ inputs.artifacts-path }}
 
       - name: Upload release artifacts
-        if: ${{ steps.release.release_created }}
+        if: ${{ steps.release.outputs.release_created }}
         run: gh release upload ${{ steps.release.outputs.tag_name }} ${{ inputs.artifacts-path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
